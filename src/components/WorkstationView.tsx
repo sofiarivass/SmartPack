@@ -3,6 +3,7 @@ import { Shipment } from '../types';
 import { saveShipmentToFirebase } from '../lib/firebase';
 import { useArduinoSerial } from '../lib/useArduinoSerial';
 import { WokwiSimulationModal } from './WokwiSimulationModal';
+import { DispatchFormModal, DispatchFormData } from './DispatchFormModal';
 
 interface Props {
   shipments: Shipment[];
@@ -30,6 +31,7 @@ export const WorkstationView: React.FC<Props> = ({
   const [actionState, setActionState] = useState<'idle' | 'transmitting' | 'success'>('idle');
   const [firebaseSyncNotice, setFirebaseSyncNotice] = useState<string | null>(null);
   const [showSimModal, setShowSimModal] = useState<boolean>(false);
+  const [showDispatchModal, setShowDispatchModal] = useState<boolean>(false);
 
   // Sync state whenever new data packet arrives from Arduino
   useEffect(() => {
@@ -58,11 +60,18 @@ export const WorkstationView: React.FC<Props> = ({
     ((currentLength * currentWidth * currentHeight) / 5000).toFixed(2)
   );
 
-  const handleActionClick = async () => {
+  const handleActionClick = () => {
+    setShowDispatchModal(true);
+  };
+
+  const handleConfirmDispatch = async (formData: DispatchFormData) => {
+    setShowDispatchModal(false);
     setActionState('transmitting');
     
-    // Construct the full shipment payload
-    const fee = Number((volumetricWeight * 3.8 + 8).toFixed(2));
+    // Construct the full shipment payload with recipient info and chosen destination
+    const fee = currentTarifa || Number((volumetricWeight * 3.8 + 8).toFixed(2));
+    const nowTime = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
     const currentPackage: Shipment = {
       id: `SP-${Math.floor(98215 + Math.random() * 50)}`,
       weight: currentWeight,
@@ -75,19 +84,21 @@ export const WorkstationView: React.FC<Props> = ({
       sensorId: 'Sensor SmartPack v4',
       batch: 'Lote Operativo Hub Norte',
       lastUpdate: 'Ahora',
+      recipient: formData.recipient,
+      client: `${formData.recipient.nombre} ${formData.recipient.apellido}`,
       origin: {
-        hub: 'Hub Logístico Norte (Muelle 4)',
-        dispatchedTime: '11:45 AM',
+        hub: formData.originHub,
+        dispatchedTime: nowTime,
       },
       destination: {
-        hub: 'Barcelona Express (Zona Franca)',
+        hub: formData.destinationHub,
         estimatedDelivery: 'Mañana, < 18:00',
       },
       routeProgress: [
         {
           number: 1,
           title: '1. Ingresado',
-          subtitle: 'Hub Logístico Norte',
+          subtitle: formData.originHub,
           detail: 'Báscula y escáner óptico validados',
           completed: true,
           active: false,
@@ -95,15 +106,15 @@ export const WorkstationView: React.FC<Props> = ({
         {
           number: 2,
           title: '2. En Tránsito',
-          subtitle: 'Generación de guía ZPL',
-          detail: 'Etiqueta adherida y registrada en Firestore',
+          subtitle: 'Guía ZPL y Receptor Registrado',
+          detail: `Destinatario: ${formData.recipient.nombre} ${formData.recipient.apellido} (DNI ${formData.recipient.dni})`,
           completed: false,
           active: true,
         },
         {
           number: 3,
           title: '3. Entregado',
-          subtitle: 'Estimado: Mañana antes de las 18:00',
+          subtitle: `Destino: ${formData.destinationHub}`,
           detail: 'Pendiente de entrega',
           completed: false,
           active: false,
@@ -136,8 +147,8 @@ export const WorkstationView: React.FC<Props> = ({
         setActionState('idle');
         onOpenLabelModal(currentPackage);
         setTimeout(() => setFirebaseSyncNotice(null), 4000);
-      }, 900);
-    }, 1000);
+      }, 700);
+    }, 800);
   };
 
 
@@ -644,6 +655,21 @@ export const WorkstationView: React.FC<Props> = ({
         <WokwiSimulationModal
           onClose={() => setShowSimModal(false)}
           onInject={arduino.injectManualData}
+        />
+      )}
+
+      {showDispatchModal && (
+        <DispatchFormModal
+          currentWeight={currentWeight}
+          currentLength={currentLength}
+          currentWidth={currentWidth}
+          currentHeight={currentHeight}
+          volumeM3={volumeM3}
+          volumetricWeight={volumetricWeight}
+          category={currentCategory}
+          tarifa={currentTarifa}
+          onClose={() => setShowDispatchModal(false)}
+          onSubmit={handleConfirmDispatch}
         />
       )}
     </div>

@@ -266,38 +266,91 @@ export const TrackingView: React.FC<Props> = ({
               </div>
             </div>
 
+            {/* TARJETA DESTACADA DEL RECEPTOR DEL PAQUETE */}
+            <div className="my-6 p-4 md:p-5 rounded-xl bg-secondary-container/20 border border-secondary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-secondary text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <span className="material-symbols-outlined text-[24px]">assignment_ind</span>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[11px] font-bold text-secondary uppercase tracking-wider">
+                      Receptor del Paquete
+                    </span>
+                    <span className="text-[10px] bg-secondary/15 text-secondary px-2 py-0.5 rounded-full font-semibold">
+                      Identidad Verificada
+                    </span>
+                  </div>
+                  <span className="font-headline-sm text-base md:text-lg font-bold text-on-surface">
+                    {matchedShipment.recipient
+                      ? `${matchedShipment.recipient.nombre} ${matchedShipment.recipient.apellido}`
+                      : matchedShipment.client || 'Destinatario Registrado'}
+                  </span>
+                  <div className="flex items-center gap-3 text-xs text-outline mt-0.5 flex-wrap">
+                    <span className="flex items-center gap-1 font-mono font-bold text-on-surface">
+                      <span className="material-symbols-outlined text-[15px] text-secondary">badge</span>
+                      DNI: {matchedShipment.recipient?.dni || 'Verificado IoT'}
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1 text-on-surface-variant font-medium">
+                      <span className="material-symbols-outlined text-[15px] text-secondary">store</span>
+                      Retiro en: {matchedShipment.destination.hub}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-secondary/20">
+                <span className="text-[11px] text-outline">Custodia Biométrica</span>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-secondary">
+                  <span className="material-symbols-outlined text-[16px]">verified</span>
+                  Firebase Sincronizado
+                </span>
+              </div>
+            </div>
+
             {/* DATOS DE ORIGEN Y DESTINO */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8 p-4 rounded-lg bg-surface-container-low/60">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-6 p-4 rounded-xl bg-surface-container-low/60 border border-surface-container">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="material-symbols-outlined text-on-surface text-[18px]">
-                    flight_takeoff
+                <div className="w-9 h-9 rounded-xl bg-surface-container flex items-center justify-center shrink-0 mt-0.5 text-on-surface">
+                  <span className="material-symbols-outlined text-[20px]">
+                    warehouse
                   </span>
                 </div>
                 <div>
-                  <span className="font-label-sm text-label-sm text-outline uppercase block">
-                    Origen
-                  </span>
-                  <span className="font-body-md text-body-md text-on-surface font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-label-sm text-label-sm text-outline uppercase block font-semibold">
+                      Sucursal de Origen
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-outline px-1.5 py-0.2 rounded bg-surface-container">
+                      Fija
+                    </span>
+                  </div>
+                  <span className="font-body-md text-body-md text-on-surface font-semibold block mt-0.5">
                     {matchedShipment.origin.hub}
                   </span>
                   {matchedShipment.origin.dispatchedTime && (
                     <span className="font-body-sm text-body-sm text-on-surface-variant block mt-0.5">
-                      Despachado: {matchedShipment.origin.dispatchedTime}
+                      Despachado: {matchedShipment.origin.dispatchedTime} • Muelle de Carga
                     </span>
                   )}
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-secondary-container/40 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="material-symbols-outlined text-secondary text-[18px]">flag</span>
+                <div className="w-9 h-9 rounded-xl bg-secondary-container/40 flex items-center justify-center shrink-0 mt-0.5 text-secondary">
+                  <span className="material-symbols-outlined text-[20px]">flag</span>
                 </div>
                 <div>
-                  <span className="font-label-sm text-label-sm text-outline uppercase block">
-                    Destino
-                  </span>
-                  <span className="font-body-md text-body-md text-on-surface font-medium">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-label-sm text-label-sm text-outline uppercase block font-semibold">
+                      Sucursal de Destino
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-secondary px-1.5 py-0.2 rounded bg-secondary-container/40">
+                      Asignada
+                    </span>
+                  </div>
+                  <span className="font-body-md text-body-md text-on-surface font-semibold block mt-0.5">
                     {matchedShipment.destination.hub}
                   </span>
                   {matchedShipment.destination.estimatedDelivery && (

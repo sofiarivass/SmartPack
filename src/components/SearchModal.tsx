@@ -14,12 +14,19 @@ export const SearchModal: React.FC<Props> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
+  const term = searchTerm.toLowerCase();
   const filtered = shipments.filter(
     (s) =>
-      s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.destination.hub.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.origin.hub.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.status.toLowerCase().includes(searchTerm.toLowerCase())
+      s.id.toLowerCase().includes(term) ||
+      s.destination.hub.toLowerCase().includes(term) ||
+      s.origin.hub.toLowerCase().includes(term) ||
+      s.status.toLowerCase().includes(term) ||
+      (s.recipient && (
+        s.recipient.nombre.toLowerCase().includes(term) ||
+        s.recipient.apellido.toLowerCase().includes(term) ||
+        s.recipient.dni.toLowerCase().includes(term)
+      )) ||
+      (s.client && s.client.toLowerCase().includes(term))
   );
 
   return (
@@ -86,6 +93,11 @@ export const SearchModal: React.FC<Props> = ({
                     <span className="text-xs text-outline block">
                       {item.origin.hub} → {item.destination.hub}
                     </span>
+                    {item.recipient && (
+                      <span className="text-[11px] text-secondary font-medium block">
+                        Receptor: {item.recipient.nombre} {item.recipient.apellido} ({item.recipient.dni})
+                      </span>
+                    )}
                   </div>
                 </div>
 

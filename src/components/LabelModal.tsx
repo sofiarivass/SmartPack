@@ -12,13 +12,14 @@ export const LabelModal: React.FC<Props> = ({ shipment, onClose, onTrack }) => {
   const [copiedZPL, setCopiedZPL] = useState(false);
 
   const zplCode = `^XA
-^FO50,50^A0N,40,40^FDSmartPack IoT Logistics^FS
-^FO50,100^BY3^BCN,100,Y,N,N^FD${shipment.id}^FS
-^FO50,230^A0N,25,25^FDORIGEN: ${shipment.origin.hub}^FS
-^FO50,265^A0N,25,25^FDDESTINO: ${shipment.destination.hub}^FS
-^FO50,300^A0N,25,25^FDPESO REAL: ${shipment.weight} KG  VOLUMEN: ${shipment.volumeM3} M3^FS
-^FO50,335^A0N,25,25^FDPESO VOLUMETRICO (IATA 1:5000): ${shipment.volumetricWeight} KG^FS
-^FO50,370^BQN,2,6^FDQA,${shipment.id};TRACK;IOT_VERIFIED^FS
+^FO50,45^A0N,38,38^FDSmartPack IoT Logistics^FS
+^FO50,90^BY3^BCN,85,Y,N,N^FD${shipment.id}^FS
+^FO50,195^A0N,22,22^FDRECEPTOR: ${shipment.recipient ? `${shipment.recipient.nombre.toUpperCase()} ${shipment.recipient.apellido.toUpperCase()} - DNI: ${shipment.recipient.dni}` : (shipment.client || 'CLIENTE')}^FS
+^FO50,225^A0N,24,24^FDORIGEN: ${shipment.origin.hub}^FS
+^FO50,255^A0N,24,24^FDDESTINO: ${shipment.destination.hub}^FS
+^FO50,285^A0N,22,22^FDPESO REAL: ${shipment.weight} KG  VOLUMEN: ${shipment.volumeM3} M3^FS
+^FO50,315^A0N,22,22^FDPESO VOLUMETRICO (IATA 1:5000): ${shipment.volumetricWeight} KG^FS
+^FO50,350^BQN,2,5^FDQA,${shipment.id};DEST:${shipment.destination.hub};RECEPTOR:${shipment.recipient?.dni || 'N/A'}^FS
 ^XZ`;
 
   const handleCopyZPL = () => {
@@ -79,7 +80,7 @@ export const LabelModal: React.FC<Props> = ({ shipment, onClose, onTrack }) => {
 
             {/* Barcode Simulated Lines */}
             <div className="flex flex-col items-center py-2 bg-slate-50 border border-slate-200 rounded p-2">
-              <div className="w-full h-16 flex items-center justify-between gap-[2px] px-2 overflow-hidden">
+              <div className="w-full h-14 flex items-center justify-between gap-[2px] px-2 overflow-hidden">
                 {Array.from({ length: 48 }).map((_, i) => (
                   <div
                     key={i}
@@ -95,11 +96,28 @@ export const LabelModal: React.FC<Props> = ({ shipment, onClose, onTrack }) => {
               </span>
             </div>
 
+            {/* Recipient Details in thermal label */}
+            <div className="bg-slate-50 p-2 rounded text-xs font-sans border border-slate-200">
+              <span className="text-[9px] text-slate-500 uppercase block font-bold">
+                RECEPTOR DEL PAQUETE (DESTINATARIO)
+              </span>
+              <div className="flex items-center justify-between mt-0.5">
+                <span className="font-bold text-black truncate">
+                  {shipment.recipient
+                    ? `${shipment.recipient.nombre} ${shipment.recipient.apellido}`
+                    : shipment.client || 'Cliente General'}
+                </span>
+                <span className="font-mono text-[11px] font-bold text-secondary">
+                  DNI: {shipment.recipient?.dni || 'REG-IOT'}
+                </span>
+              </div>
+            </div>
+
             {/* Origin & Destination details */}
             <div className="grid grid-cols-2 gap-2 text-xs border-b pb-2 border-slate-300 font-sans">
               <div>
                 <span className="text-[10px] text-slate-500 uppercase block font-semibold">
-                  ORIGEN
+                  ORIGEN (FIJO)
                 </span>
                 <span className="font-semibold block truncate">
                   {shipment.origin.hub}

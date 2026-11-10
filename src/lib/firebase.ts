@@ -26,14 +26,19 @@ export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfi
 export const db = getFirestore(app);
 
 export function generateZplLabel(shipment: Shipment): string {
+  const recipientLine = shipment.recipient
+    ? `^FO50,195^A0N,22,22^FDRECEPTOR: ${shipment.recipient.nombre.toUpperCase()} ${shipment.recipient.apellido.toUpperCase()} - DNI: ${shipment.recipient.dni}^FS`
+    : `^FO50,195^A0N,22,22^FDCLIENTE: ${shipment.client || 'SMARTPACK LOGISTICS'}^FS`;
+
   return `^XA
-^FO50,50^A0N,40,40^FDSmartPack IoT Logistics^FS
-^FO50,100^BY3^BCN,100,Y,N,N^FD${shipment.id}^FS
-^FO50,230^A0N,25,25^FDORIGEN: ${shipment.origin.hub}^FS
-^FO50,265^A0N,25,25^FDDESTINO: ${shipment.destination.hub}^FS
-^FO50,300^A0N,25,25^FDPESO REAL: ${shipment.weight} KG  VOLUMEN: ${shipment.volumeM3} M3^FS
-^FO50,335^A0N,25,25^FDPESO VOLUMETRICO (IATA 1:5000): ${shipment.volumetricWeight} KG^FS
-^FO50,370^BQN,2,6^FDQA,${shipment.id};TRACK;IOT_VERIFIED^FS
+^FO50,45^A0N,38,38^FDSmartPack IoT Logistics^FS
+^FO50,90^BY3^BCN,85,Y,N,N^FD${shipment.id}^FS
+${recipientLine}
+^FO50,225^A0N,24,24^FDORIGEN: ${shipment.origin.hub}^FS
+^FO50,255^A0N,24,24^FDDESTINO: ${shipment.destination.hub}^FS
+^FO50,285^A0N,22,22^FDPESO REAL: ${shipment.weight} KG  VOLUMEN: ${shipment.volumeM3} M3^FS
+^FO50,315^A0N,22,22^FDPESO VOLUMETRICO (IATA 1:5000): ${shipment.volumetricWeight} KG^FS
+^FO50,350^BQN,2,5^FDQA,${shipment.id};DEST:${shipment.destination.hub};RECEPTOR:${shipment.recipient?.dni || 'N/A'}^FS
 ^XZ`;
 }
 
@@ -62,18 +67,21 @@ export async function saveShipmentToFirebase(shipment: Shipment): Promise<{
       sensorId: shipment.sensorId || 'Sensor SmartPack v4',
       batch: shipment.batch || 'Lote Operativo Hub Norte',
       lastUpdate: 'Ahora',
+      recipient: shipment.recipient || null,
       origin: shipment.origin,
       destination: shipment.destination,
       telemetry: shipment.telemetry,
       routeProgress: shipment.routeProgress,
       labelZpl: zpl,
-      client: shipment.client || 'SmartPack Logistic Services',
+      client: shipment.recipient
+        ? `${shipment.recipient.nombre} ${shipment.recipient.apellido}`
+        : shipment.client || 'SmartPack Logistic Services',
       createdAt: new Date().toISOString(),
       updatedAt: serverTimestamp(),
     };
 
     await setDoc(docRef, payload, { merge: true });
-    console.log(`[Firebase] Envío ${shipment.id} guardado con éxito en Firestore.`);
+    console.log(`[Firebase] Envío ${shipment.id} con receptor guardado con éxito en Firestore.`);
     return { success: true, id: shipment.id };
   } catch (error: unknown) {
     const errMessage = error instanceof Error ? error.message : String(error);
@@ -112,6 +120,7 @@ export function subscribeToShipments(
             sensorId: data.sensorId || 'Sensor SmartPack v4',
             batch: data.batch || 'Lote Hub Norte',
             lastUpdate: data.lastUpdate || 'Reciente',
+            recipient: data.recipient || undefined,
             origin: data.origin || { hub: 'Hub Logístico Norte' },
             destination: data.destination || { hub: 'Destino Nacional' },
             routeProgress: data.routeProgress || [],

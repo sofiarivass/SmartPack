@@ -12,6 +12,12 @@ export interface RouteStep {
   timestamp?: string;
 }
 
+export interface RecipientInfo {
+  nombre: string;
+  apellido: string;
+  dni: string;
+}
+
 export interface Shipment {
   id: string;
   weight: number; // in kg
@@ -25,6 +31,7 @@ export interface Shipment {
   sensorId?: string;
   batch?: string;
   lastUpdate: string;
+  recipient?: RecipientInfo;
   origin: {
     hub: string;
     terminal?: string;
