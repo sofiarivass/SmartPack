@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "shipment": {
+      "title": "Shipment",
+      "description": "Datos de envíos, pesaje volumétrico IoT, telemetría y etiquetas ZPL",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Identificador único del envío (ej. SP-849203-ES)"
+        },
+        "weight": {
+          "type": "number",
+          "description": "Peso registrado en kilogramos"
+        },
+        "length": {
+          "type": "number",
+          "description": "Largo en centímetros (Eje X)"
+        },
+        "width": {
+          "type": "number",
+          "description": "Ancho en centímetros (Eje Y)"
+        },
+        "height": {
+          "type": "number",
+          "description": "Alto en centímetros (Eje Z)"
+        },
+        "volumeM3": {
+          "type": "number",
+          "description": "Volumen neto en metros cúbicos"
+        },
+        "volumetricWeight": {
+          "type": "number",
+          "description": "Peso volumétrico IATA (1:5000)"
+        },
+        "shippingFee": {
+          "type": "number",
+          "description": "Tarifa calculada en euros"
+        },
+        "status": {
+          "type": "string",
+          "description": "Estado del envío (Etiquetado, Procesado, En Tránsito Activo, Entregado)"
+        },
+        "labelZpl": {
+          "type": "string",
+          "description": "Código de etiqueta ZPL para impresión térmica"
+        },
+        "origin": {
+          "type": "object",
+          "description": "Datos del hub de origen"
+        },
+        "destination": {
+          "type": "object",
+          "description": "Datos del hub de destino"
+        },
+        "telemetry": {
+          "type": "object",
+          "description": "Micro-telemetría (temperatura, batería, sello)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Marca temporal de creación"
+        }
+      },
+      "required": ["id", "weight", "length", "width", "height", "status"]
+    }
+  },
+  "firestore": {
+    "/shipments/{shipmentId}": {
+      "schema": "shipment",
+      "description": "Colección global de envíos y paquetes procesados en SmartPack IoT"
+    }
+  }
+}

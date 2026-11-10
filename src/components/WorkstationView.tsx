@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shipment } from '../types';
+import { saveShipmentToFirebase } from '../lib/firebase';
+import { useArduinoSerial } from '../lib/useArduinoSerial';
+import { WokwiSimulationModal } from './WokwiSimulationModal';
 
 interface Props {
   shipments: Shipment[];
@@ -12,14 +15,39 @@ export const WorkstationView: React.FC<Props> = ({
   onSelectShipment,
   onOpenLabelModal,
 }) => {
+  // Arduino Web Serial connection
+  const arduino = useArduinoSerial();
+
   // Current active package on the workstation scale
   const [currentWeight, setCurrentWeight] = useState(14.85);
   const [currentLength, setCurrentLength] = useState(42.0);
   const [currentWidth, setCurrentWidth] = useState(35.5);
   const [currentHeight, setCurrentHeight] = useState(28.0);
+  const [currentCategory, setCurrentCategory] = useState<string>('MEDIANO');
+  const [currentTarifa, setCurrentTarifa] = useState<number | null>(null);
   const [isStable, setIsStable] = useState(true);
   const [latency, setLatency] = useState(18);
   const [actionState, setActionState] = useState<'idle' | 'transmitting' | 'success'>('idle');
+  const [firebaseSyncNotice, setFirebaseSyncNotice] = useState<string | null>(null);
+  const [showSimModal, setShowSimModal] = useState<boolean>(false);
+
+  // Sync state whenever new data packet arrives from Arduino
+  useEffect(() => {
+    if (arduino.lastPacket) {
+      setCurrentWeight(arduino.lastPacket.peso);
+      setCurrentLength(arduino.lastPacket.largo);
+      setCurrentWidth(arduino.lastPacket.ancho);
+      setCurrentHeight(arduino.lastPacket.alto);
+      if (arduino.lastPacket.categoria) {
+        setCurrentCategory(arduino.lastPacket.categoria);
+      }
+      if (arduino.lastPacket.tarifa) {
+        setCurrentTarifa(arduino.lastPacket.tarifa);
+      }
+      setIsStable(true);
+      setLatency(12);
+    }
+  }, [arduino.lastPacket]);
 
   // Calculate volume & IATA volumetric weight
   // Factor IATA standard 1:5000 -> (L * W * H) / 5000 in cm
@@ -30,73 +58,88 @@ export const WorkstationView: React.FC<Props> = ({
     ((currentLength * currentWidth * currentHeight) / 5000).toFixed(2)
   );
 
-  const handleActionClick = () => {
+  const handleActionClick = async () => {
     setActionState('transmitting');
+    
+    // Construct the full shipment payload
+    const fee = Number((volumetricWeight * 3.8 + 8).toFixed(2));
+    const currentPackage: Shipment = {
+      id: `SP-${Math.floor(98215 + Math.random() * 50)}`,
+      weight: currentWeight,
+      length: currentLength,
+      width: currentWidth,
+      height: currentHeight,
+      volumeM3,
+      volumetricWeight,
+      status: 'Etiquetado',
+      sensorId: 'Sensor SmartPack v4',
+      batch: 'Lote Operativo Hub Norte',
+      lastUpdate: 'Ahora',
+      origin: {
+        hub: 'Hub Logístico Norte (Muelle 4)',
+        dispatchedTime: '11:45 AM',
+      },
+      destination: {
+        hub: 'Barcelona Express (Zona Franca)',
+        estimatedDelivery: 'Mañana, < 18:00',
+      },
+      routeProgress: [
+        {
+          number: 1,
+          title: '1. Ingresado',
+          subtitle: 'Hub Logístico Norte',
+          detail: 'Báscula y escáner óptico validados',
+          completed: true,
+          active: false,
+        },
+        {
+          number: 2,
+          title: '2. En Tránsito',
+          subtitle: 'Generación de guía ZPL',
+          detail: 'Etiqueta adherida y registrada en Firestore',
+          completed: false,
+          active: true,
+        },
+        {
+          number: 3,
+          title: '3. Entregado',
+          subtitle: 'Estimado: Mañana antes de las 18:00',
+          detail: 'Pendiente de entrega',
+          completed: false,
+          active: false,
+        },
+      ],
+      telemetry: {
+        internalTemp: 4.8,
+        tempStatus: 'Óptima',
+        trackerBatteryPercent: 99,
+        trackerRemainingDays: 24,
+        electronicSeal: 'Intacto',
+        sealStatus: 'Verificado',
+      },
+      shippingFee: fee,
+    };
+
+    // Save to Firebase Firestore
+    try {
+      const res = await saveShipmentToFirebase(currentPackage);
+      if (res.success) {
+        setFirebaseSyncNotice(`Guardado en Firebase: ${currentPackage.id}`);
+      }
+    } catch (err) {
+      console.warn('Firebase save fallback:', err);
+    }
+
     setTimeout(() => {
       setActionState('success');
       setTimeout(() => {
         setActionState('idle');
-        // Open the label modal with the current package data
-        const currentPackage: Shipment = {
-          id: `SP-${Math.floor(98215 + Math.random() * 50)}`,
-          weight: currentWeight,
-          length: currentLength,
-          width: currentWidth,
-          height: currentHeight,
-          volumeM3,
-          volumetricWeight,
-          status: 'Etiquetado',
-          sensorId: 'Sensor SmartPack v4',
-          batch: 'Lote Operativo Hub Norte',
-          lastUpdate: 'Ahora',
-          origin: {
-            hub: 'Hub Logístico Norte (Muelle 4)',
-            dispatchedTime: '11:45 AM',
-          },
-          destination: {
-            hub: 'Barcelona Express (Zona Franca)',
-            estimatedDelivery: 'Mañana, < 18:00',
-          },
-          routeProgress: [
-            {
-              number: 1,
-              title: '1. Ingresado',
-              subtitle: 'Hub Logístico Norte',
-              detail: 'Báscula y escáner óptico validados',
-              completed: true,
-              active: false,
-            },
-            {
-              number: 2,
-              title: '2. En Tránsito',
-              subtitle: 'Generación de guía ZPL',
-              detail: 'Etiqueta adherida y confirmada',
-              completed: false,
-              active: true,
-            },
-            {
-              number: 3,
-              title: '3. Entregado',
-              subtitle: 'Estimado: Mañana antes de las 18:00',
-              detail: 'Pendiente de entrega',
-              completed: false,
-              active: false,
-            },
-          ],
-          telemetry: {
-            internalTemp: 4.8,
-            tempStatus: 'Óptima',
-            trackerBatteryPercent: 99,
-            trackerRemainingDays: 24,
-            electronicSeal: 'Intacto',
-            sealStatus: 'Verificado',
-          },
-          shippingFee: Number((volumetricWeight * 3.8 + 8).toFixed(2)),
-        };
         onOpenLabelModal(currentPackage);
-      }, 1000);
-    }, 1200);
+        setTimeout(() => setFirebaseSyncNotice(null), 4000);
+      }, 900);
+    }, 1000);
   };
+
 
   const handleSimulateNewPackage = () => {
     setIsStable(false);
@@ -143,22 +186,91 @@ export const WorkstationView: React.FC<Props> = ({
             </p>
           </div>
 
-          {/* Sync Badge */}
-          <div className="flex items-center gap-space-md bg-surface-container-lowest px-space-md py-space-sm rounded-xl shadow-sm border border-outline-variant/30 self-start md:self-auto">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span>
-            </span>
-            <div className="flex flex-col">
-              <span className="font-label-sm text-label-sm text-secondary font-semibold">
-                Sincronizado vía BLE / MQTT
+          {/* Sync Badges & Arduino Hardware Connection */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-space-md self-start md:self-auto">
+            {/* Arduino Hardware Serial Connection */}
+            {arduino.isConnected ? (
+              <div className="flex items-center justify-between gap-3 bg-secondary-container/40 border border-secondary px-3.5 py-2 rounded-xl shadow-xs">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span>
+                  </span>
+                  <div className="flex flex-col">
+                    <span className="font-label-sm text-label-sm text-secondary font-bold flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[16px]">usb</span>
+                      Arduino USB Conectado
+                    </span>
+                    <span className="font-code-telemetry text-[11px] text-on-surface-variant">
+                      {arduino.packetCount} paquetes • 9600 baud
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={arduino.disconnect}
+                  className="px-2 py-1 rounded bg-surface-container-lowest text-[11px] font-semibold text-error hover:bg-error-container/40 transition-colors cursor-pointer"
+                >
+                  Desconectar
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={arduino.connect}
+                  disabled={arduino.isConnecting}
+                  className="px-3.5 py-2 rounded-xl bg-primary-container text-on-primary text-xs font-semibold hover:bg-slate-800 transition-all shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-70"
+                  title="Conectar directamente al Arduino Uno vía USB Serial (9600 baud)"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-secondary-fixed">usb</span>
+                  <span>{arduino.isConnecting ? 'Buscando puerto...' : 'Conectar Arduino USB'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSimModal(true)}
+                  className="p-2 rounded-xl bg-surface-container-lowest border border-outline-variant/40 text-outline hover:text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                  title="Simular lecturas de Wokwi manualmente"
+                >
+                  <span className="material-symbols-outlined text-[18px]">developer_board</span>
+                </button>
+              </div>
+            )}
+
+            {/* Gateway MQTT status */}
+            <div className="flex items-center gap-space-md bg-surface-container-lowest px-space-md py-space-sm rounded-xl shadow-sm border border-outline-variant/30">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-secondary"></span>
               </span>
-              <span className="font-code-telemetry text-code-telemetry text-outline">
-                Latencia: {latency}ms • Gateway #A4-09
-              </span>
+              <div className="flex flex-col">
+                <span className="font-label-sm text-label-sm text-secondary font-semibold">
+                  Sincronizado vía BLE / MQTT
+                </span>
+                <span className="font-code-telemetry text-code-telemetry text-outline">
+                  Latencia: {latency}ms • Gateway #A4-09
+                </span>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Browser compatibility / connection error warning */}
+        {arduino.error && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-xl text-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-amber-700 text-[18px]">info</span>
+              <span>{arduino.error}</span>
+            </div>
+            <button
+              onClick={() => setShowSimModal(true)}
+              className="font-bold underline text-amber-800 ml-4 cursor-pointer"
+            >
+              Probar con Simulador Wokwi
+            </button>
+          </div>
+        )}
 
         {/* 4 Telemetry Metrics Cards */}
         <section
@@ -195,17 +307,12 @@ export const WorkstationView: React.FC<Props> = ({
                     isStable ? 'bg-secondary' : 'bg-amber-500 animate-pulse'
                   }`}
                 ></span>
-                {isStable ? 'Estable' : 'Pesando...'}
+                {arduino.isConnected ? 'Arduino HX711' : isStable ? 'Estable' : 'Pesando...'}
               </span>
 
-              <button
-                onClick={handleTare}
-                className="text-xs font-medium text-outline hover:text-on-surface transition-colors cursor-pointer px-1 py-0.5 rounded hover:bg-surface-container-low"
-                title="Poner a cero / Tara"
-                type="button"
-              >
-                Tara
-              </button>
+              <span className="font-code-telemetry text-[11px] text-outline">
+                HX711 • A0/A1
+              </span>
             </div>
           </div>
 
@@ -237,7 +344,7 @@ export const WorkstationView: React.FC<Props> = ({
                 Eje X
               </span>
               <span className="font-code-telemetry text-[11px] text-outline">
-                Láser óptico
+                HC-SR04 • Pin 7/6
               </span>
             </div>
           </div>
@@ -270,7 +377,7 @@ export const WorkstationView: React.FC<Props> = ({
                 Eje Y
               </span>
               <span className="font-code-telemetry text-[11px] text-outline">
-                Cortina IR
+                HC-SR04 • Pin 5/4
               </span>
             </div>
           </div>
@@ -303,7 +410,7 @@ export const WorkstationView: React.FC<Props> = ({
                 Eje Z
               </span>
               <span className="font-code-telemetry text-[11px] text-outline">
-                Sensor ToF
+                HC-SR04 • Pin 3/2
               </span>
             </div>
           </div>
@@ -318,11 +425,47 @@ export const WorkstationView: React.FC<Props> = ({
             <div className="flex flex-col items-center gap-space-xs">
               <div className="inline-flex items-center gap-space-sm bg-surface-container-low px-space-md py-1 rounded-full text-on-surface-variant font-label-sm text-label-sm mb-space-xs">
                 <span className="material-symbols-outlined text-secondary text-[16px]">sensors</span>
-                Lectura Confirmada del Paquete Actual
+                {arduino.isConnected ? 'Transmisión Serial USB Activa (9600 baud)' : 'Lectura Confirmada del Paquete Actual'}
               </div>
               <p className="font-headline-sm text-headline-sm text-on-surface font-semibold">
                 Listo para emisión de guía de despacho
               </p>
+
+              {/* Arduino Firmware Classification Badge */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                <span
+                  className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold ${
+                    currentCategory === 'EXCESO'
+                      ? 'bg-red-100 text-red-700 border border-red-200'
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      currentCategory === 'EXCESO' ? 'bg-red-500' : 'bg-emerald-500'
+                    }`}
+                  ></span>
+                  Arduino: {currentCategory} {currentTarifa ? `• $${currentTarifa}` : ''}
+                </span>
+
+                <span className="text-[11px] text-outline flex items-center gap-1 bg-surface-container-low px-2.5 py-0.5 rounded-md">
+                  <span className="font-semibold">LEDs:</span>
+                  <span className={currentCategory !== 'EXCESO' ? 'text-emerald-600 font-bold' : 'text-slate-400'}>
+                    Verde (Pin 11)
+                  </span>
+                  <span>/</span>
+                  <span className={currentCategory === 'EXCESO' ? 'text-red-600 font-bold' : 'text-slate-400'}>
+                    Rojo (Pin 12)
+                  </span>
+                </span>
+              </div>
+
+              {firebaseSyncNotice && (
+                <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary-container/40 text-secondary text-xs font-semibold animate-in fade-in">
+                  <span className="material-symbols-outlined text-[16px]">cloud_done</span>
+                  <span>{firebaseSyncNotice}</span>
+                </div>
+              )}
             </div>
 
             {/* Action Button */}
@@ -496,6 +639,13 @@ export const WorkstationView: React.FC<Props> = ({
           </div>
         </section>
       </div>
+
+      {showSimModal && (
+        <WokwiSimulationModal
+          onClose={() => setShowSimModal(false)}
+          onInject={arduino.injectManualData}
+        />
+      )}
     </div>
   );
 };

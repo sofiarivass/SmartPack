@@ -44,9 +44,14 @@ export const LabelModal: React.FC<Props> = ({ shipment, onClose, onTrack }) => {
               <span className="font-headline-sm text-sm font-bold text-on-surface">
                 Guía de Despacho ZPL Emitida
               </span>
-              <span className="font-code-telemetry text-xs text-secondary">
-                {shipment.id} • Transmitido a Impresora #Z4M-01
-              </span>
+              <div className="flex items-center gap-1.5 font-code-telemetry text-xs text-secondary">
+                <span>{shipment.id} • Impresora #Z4M-01</span>
+                <span>•</span>
+                <span className="flex items-center gap-0.5 text-on-surface-variant font-medium">
+                  <span className="material-symbols-outlined text-[13px] text-secondary">cloud_done</span>
+                  Firebase: smartpack-64dfc
+                </span>
+              </div>
             </div>
           </div>
           <button

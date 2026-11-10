@@ -16,11 +16,12 @@ import { LabelModal } from './components/LabelModal';
 import { SearchModal } from './components/SearchModal';
 import { NotificationsModal } from './components/NotificationsModal';
 import { SupportModal } from './components/SupportModal';
+import { subscribeToShipments, saveShipmentToFirebase } from './lib/firebase';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewMode>('resumen');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [shipments] = useState<Shipment[]>(INITIAL_SHIPMENTS);
+  const [shipments, setShipments] = useState<Shipment[]>(INITIAL_SHIPMENTS);
   const [selectedShipmentId, setSelectedShipmentId] = useState<string>('SP-849203-ES');
 
   // Modals
@@ -28,6 +29,28 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [supportOpen, setSupportOpen] = useState(false);
+
+  // Subscribe to real-time shipments from Firebase Firestore
+  useEffect(() => {
+    const unsubscribe = subscribeToShipments((remoteShipments) => {
+      if (remoteShipments && remoteShipments.length > 0) {
+        setShipments((prev) => {
+          const map = new Map<string, Shipment>();
+          // Newest remote records first
+          remoteShipments.forEach((s) => map.set(s.id, s));
+          // Keep existing seed records if not yet in remote
+          prev.forEach((s) => {
+            if (!map.has(s.id)) {
+              map.set(s.id, s);
+            }
+          });
+          return Array.from(map.values());
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Keyboard shortcut Ctrl+K for search
   useEffect(() => {
@@ -49,6 +72,12 @@ export default function App() {
   const handleTrackCode = (code: string) => {
     setSelectedShipmentId(code);
     setCurrentView('etiquetas');
+  };
+
+  const handleNewShipmentCreated = async (pkg: Shipment) => {
+    setActiveLabelShipment(pkg);
+    setShipments((prev) => [pkg, ...prev.filter((p) => p.id !== pkg.id)]);
+    await saveShipmentToFirebase(pkg);
   };
 
   return (
@@ -90,7 +119,7 @@ export default function App() {
               <WorkstationView
                 shipments={shipments}
                 onSelectShipment={handleSelectShipment}
-                onOpenLabelModal={(pkg) => setActiveLabelShipment(pkg)}
+                onOpenLabelModal={handleNewShipmentCreated}
               />
             )}
 
