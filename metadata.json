@@ -1,0 +1,6 @@
+{
+  "name": "SmartPack Manager IoT",
+  "description": "Plataforma de telemetría IoT, medición volumétrica en tiempo real y rastreo inteligente de envíos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
