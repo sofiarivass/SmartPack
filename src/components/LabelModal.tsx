@@ -32,10 +32,10 @@ export const LabelModal: React.FC<Props> = ({ shipment, onClose, onTrack }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface-container max-w-lg w-full overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto">
+      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface-container max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden my-auto">
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-container bg-surface-container-low/50">
+        <div className="shrink-0 flex items-center justify-between px-5 py-3 sm:px-6 sm:py-4 border-b border-surface-container bg-surface-container-low/50">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-secondary text-[24px]">
               verified
@@ -64,7 +64,7 @@ export const LabelModal: React.FC<Props> = ({ shipment, onClose, onTrack }) => {
         </div>
 
         {/* Physical Thermal Label Preview */}
-        <div className="p-6 bg-surface-container-low/30 flex flex-col items-center">
+        <div className="p-4 sm:p-6 bg-surface-container-low/30 flex flex-col items-center overflow-y-auto flex-1 min-h-0 overscroll-contain">
           <div className="w-full max-w-sm bg-white border-2 border-dashed border-outline-variant rounded-xl p-5 shadow-sm text-black font-mono flex flex-col gap-3">
             {/* Label Header */}
             <div className="flex items-center justify-between pb-2 border-b-2 border-black">
@@ -176,7 +176,7 @@ export const LabelModal: React.FC<Props> = ({ shipment, onClose, onTrack }) => {
         </div>
 
         {/* Modal Actions */}
-        <div className="p-4 border-t border-surface-container bg-surface-container-lowest flex items-center justify-between gap-3">
+        <div className="shrink-0 p-3 sm:p-4 border-t border-surface-container bg-surface-container-lowest flex items-center justify-between gap-3">
           <button
             onClick={handleCopyZPL}
             className="px-4 py-2 border border-surface-container rounded-lg text-xs font-medium text-on-surface hover:bg-surface-container-low transition-colors flex items-center gap-1.5 cursor-pointer"

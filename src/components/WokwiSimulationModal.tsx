@@ -67,10 +67,10 @@ export const WokwiSimulationModal: React.FC<Props> = ({ onClose, onInject }) => 
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface-container max-w-lg w-full overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto">
+      <div className="bg-surface-container-lowest rounded-2xl shadow-2xl border border-surface-container max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden my-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-container bg-surface-container-low/40">
+        <div className="shrink-0 flex items-center justify-between px-5 py-3 sm:px-6 sm:py-3.5 border-b border-surface-container bg-surface-container-low/40">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-secondary text-[22px]">
               developer_board
@@ -93,7 +93,7 @@ export const WokwiSimulationModal: React.FC<Props> = ({ onClose, onInject }) => 
         </div>
 
         {/* Content */}
-        <div className="p-6 flex flex-col gap-5 text-sm">
+        <div className="p-4 sm:p-6 flex flex-col gap-4 sm:gap-5 text-sm overflow-y-auto flex-1 min-h-0 overscroll-contain">
           {/* Quick presets */}
           <div>
             <span className="text-xs font-semibold text-outline uppercase tracking-wider block mb-2">
@@ -211,23 +211,23 @@ export const WokwiSimulationModal: React.FC<Props> = ({ onClose, onInject }) => 
             <span className="text-xs font-semibold text-outline uppercase tracking-wider block mb-1">
               Trama Serial JSON transmitida al navegador (9600 baud):
             </span>
-            <pre className="p-2.5 rounded-lg bg-slate-900 text-emerald-400 font-mono text-[11px] overflow-x-auto">
+            <pre className="p-2.5 rounded-lg bg-slate-900 text-emerald-400 font-mono text-[11px] overflow-x-auto max-h-28 overflow-y-auto">
               {jsonPreview}
             </pre>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-surface-container bg-surface-container-lowest flex items-center justify-between">
+        <div className="shrink-0 p-3 sm:p-4 border-t border-surface-container bg-surface-container-lowest flex items-center justify-between gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+            className="px-3.5 py-2 rounded-lg text-xs font-medium text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
           >
             Cancelar
           </button>
           <button
             onClick={handleApply}
-            className="px-5 py-2.5 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-secondary/90 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+            className="px-4 py-2 sm:px-5 sm:py-2.5 bg-secondary text-white rounded-xl text-xs font-bold hover:bg-secondary/90 transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
           >
             <span className="material-symbols-outlined text-[16px]">sensors</span>
             <span>Inyectar en Cards de Envíos</span>
