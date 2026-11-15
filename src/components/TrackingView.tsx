@@ -62,8 +62,8 @@ export const TrackingView: React.FC<Props> = ({
         {/* HEADER MINIMALISTA (Only when standalone) */}
         {!embedded ? (
           <header className="w-full flex items-center justify-between pb-8 md:pb-16 border-b border-surface-container">
-            <div className="flex items-center gap-3">
-              <SmartPackLogo className="h-9 md:h-11 w-auto object-contain cursor-pointer" />
+            <div className="flex items-center">
+              <SmartPackLogo size="lg" className="cursor-pointer" />
             </div>
 
             <div className="flex items-center gap-4 sm:gap-6">

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { SmartPackLogo } from './SmartPackLogo';
 
 interface Props {
   collapsed: boolean;
@@ -24,15 +23,8 @@ export const Header: React.FC<Props> = ({
         collapsed ? 'left-20' : 'left-72'
       } right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl transition-all duration-300 border-b border-surface-container/40`}
     >
-      {/* Left side: Brand + Live Sensors Status */}
+      {/* Left side: Live Sensors Status */}
       <div className="flex items-center gap-space-lg">
-        <div className="flex items-center gap-space-sm">
-          <SmartPackLogo className="h-8 w-auto object-contain" />
-          <span className="font-headline-sm text-headline-sm text-on-surface font-bold tracking-tight hidden sm:inline">
-            SmartPack Manager
-          </span>
-        </div>
-
         <div className="inline-flex items-center gap-space-sm bg-surface-container-low px-space-md py-1 rounded-full shadow-[0_0_12px_rgba(13,148,136,0.18)]">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>

@@ -69,9 +69,8 @@ export const LabelModal: React.FC<Props> = ({ shipment, onClose, onTrack }) => {
           <div className="w-full max-w-sm bg-white border-2 border-dashed border-outline-variant rounded-xl p-5 shadow-sm text-black font-mono flex flex-col gap-3">
             {/* Label Header */}
             <div className="flex items-center justify-between pb-2 border-b-2 border-black">
-              <div className="flex items-center gap-2">
-                <SmartPackLogo className="h-6 w-auto object-contain" />
-                <span className="font-sans font-bold text-sm tracking-tight">SmartPack IoT</span>
+              <div className="flex items-center">
+                <SmartPackLogo size="sm" />
               </div>
               <span className="text-xs font-sans font-bold uppercase bg-black text-white px-2 py-0.5 rounded">
                 EXPRESS 24H

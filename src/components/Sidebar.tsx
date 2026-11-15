@@ -32,27 +32,21 @@ export const Sidebar: React.FC<Props> = ({
     >
       <div className="flex flex-col gap-space-lg">
         {/* Header Logo area */}
-        <div className="px-space-lg flex items-center justify-between">
+        <div
+          className={`${
+            collapsed ? 'px-2 flex-col gap-2' : 'px-space-lg justify-between'
+          } flex items-center`}
+        >
           <div
             onClick={() => onSelectView('resumen')}
-            className="flex items-center gap-space-sm cursor-pointer overflow-hidden"
+            className="flex items-center cursor-pointer overflow-hidden"
           >
-            <SmartPackLogo className="h-8 w-auto object-contain shrink-0" />
-            {!collapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="font-headline-sm text-headline-sm text-on-surface tracking-tight leading-none truncate">
-                  SmartPack
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider truncate">
-                  Manager IoT
-                </span>
-              </div>
-            )}
+            <SmartPackLogo variant={collapsed ? 'icon-only' : 'full'} size="md" />
           </div>
           <button
             aria-label={collapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
             onClick={onToggleCollapse}
-            className="p-space-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors shrink-0"
+            className="p-space-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container rounded-lg transition-colors shrink-0 cursor-pointer"
             type="button"
             title={collapsed ? 'Expandir' : 'Colapsar'}
           >
