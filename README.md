@@ -40,7 +40,6 @@ En el sector logístico, medir y pesar paquetes manualmente genera cuellos de bo
 | **Sensores** | Celda de carga (10 kg) + Módulo HX711 | 1 | Detección de peso y conversión analógico-digital de 24 bits |
 | **Interfaz** | Pantalla LCD 16x2 con módulo I2C | 1 | Visualización de medidas, categoría y tarifa en tiempo real |
 | **Indicadores** | LED Verde + LED Rojo + Resistencias 220Ω | 2 | Señalización visual de paquete aceptado o rechazado (con protección) |
-| **Estructura** | Cajas de cartón (base y superior a 90°) | 2 | Contención de la electrónica y área de pesaje y medición |
 | **Conexiones** | Protoboard (400 puntos) + Cables Jumpers (M-M / M-H) | 1 kit | Distribución de energía e interconexión de sensores y placa |
 
 ---
