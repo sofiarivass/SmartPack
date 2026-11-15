@@ -31,7 +31,7 @@ En el sector logístico, medir y pesar paquetes manualmente genera cuellos de bo
 
 ---
 
-## 🛠️ Componentes Utilizados
+## Componentes Utilizados
 
 | Categoría | Componente | Cantidad | Función Principal |
 | :--- | :--- | :---: | :--- |
