@@ -17,8 +17,10 @@ import { SearchModal } from './components/SearchModal';
 import { NotificationsModal } from './components/NotificationsModal';
 import { SupportModal } from './components/SupportModal';
 import { subscribeToShipments, saveShipmentToFirebase } from './lib/firebase';
+import { useArduinoSerial } from './lib/useArduinoSerial';
 
 export default function App() {
+  const arduino = useArduinoSerial();
   const [currentView, setCurrentView] = useState<ViewMode>('resumen');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [shipments, setShipments] = useState<Shipment[]>(INITIAL_SHIPMENTS);
@@ -118,6 +120,7 @@ export default function App() {
             {currentView === 'envios' && (
               <WorkstationView
                 shipments={shipments}
+                arduino={arduino}
                 onSelectShipment={handleSelectShipment}
                 onOpenLabelModal={handleNewShipmentCreated}
               />

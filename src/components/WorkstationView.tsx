@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Shipment } from '../types';
 import { saveShipmentToFirebase } from '../lib/firebase';
-import { useArduinoSerial } from '../lib/useArduinoSerial';
+import { ArduinoSerialState } from '../lib/useArduinoSerial';
 import { WokwiSimulationModal } from './WokwiSimulationModal';
 import { DispatchFormModal, DispatchFormData } from './DispatchFormModal';
 
 interface Props {
   shipments: Shipment[];
+  arduino: ArduinoSerialState;
   onSelectShipment: (shipment: Shipment) => void;
   onOpenLabelModal: (shipment: Shipment) => void;
 }
 
 export const WorkstationView: React.FC<Props> = ({
   shipments,
+  arduino,
   onSelectShipment,
   onOpenLabelModal,
 }) => {
-  // Arduino Web Serial connection
-  const arduino = useArduinoSerial();
-
   // Current active package on the workstation scale
   const [currentWeight, setCurrentWeight] = useState(14.85);
   const [currentLength, setCurrentLength] = useState(42.0);
@@ -43,7 +42,7 @@ export const WorkstationView: React.FC<Props> = ({
       if (arduino.lastPacket.categoria) {
         setCurrentCategory(arduino.lastPacket.categoria);
       }
-      if (arduino.lastPacket.tarifa) {
+      if (arduino.lastPacket.tarifa !== undefined) {
         setCurrentTarifa(arduino.lastPacket.tarifa);
       }
       setIsStable(true);
@@ -269,17 +268,34 @@ export const WorkstationView: React.FC<Props> = ({
 
         {/* Browser compatibility / connection error warning */}
         {arduino.error && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-2.5 rounded-xl text-xs flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-amber-700 text-[18px]">info</span>
-              <span>{arduino.error}</span>
+          <div className="bg-amber-50 border border-amber-200 text-amber-950 px-4 py-3 rounded-xl text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <span className="material-symbols-outlined text-amber-700 text-[20px] shrink-0 mt-0.5">
+                warning
+              </span>
+              <div className="flex flex-col gap-1">
+                <span className="font-semibold">{arduino.error}</span>
+                <span className="text-[11px] text-amber-800">
+                  Tip: Si tienes el Monitor Serie del Arduino IDE abierto, ciérralo primero (Windows solo permite una conexión por puerto COM).
+                </span>
+              </div>
             </div>
-            <button
-              onClick={() => setShowSimModal(true)}
-              className="font-bold underline text-amber-800 ml-4 cursor-pointer"
-            >
-              Probar con Simulador Wokwi
-            </button>
+            <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+              <button
+                type="button"
+                onClick={arduino.connect}
+                className="px-3 py-1.5 rounded-lg bg-amber-800 text-white font-semibold hover:bg-amber-900 transition-colors cursor-pointer"
+              >
+                Reintentar conexión
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSimModal(true)}
+                className="font-bold underline text-amber-900 cursor-pointer"
+              >
+                Simulador Wokwi
+              </button>
+            </div>
           </div>
         )}
 
